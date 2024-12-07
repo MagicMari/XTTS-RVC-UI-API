@@ -95,8 +95,8 @@ class VC(object):
         f0_min,
         f0_max,
         p_len,
-        hop_length=160,  # 512 before. Hop length changes the speed that the voice jumps to a different dramatic pitch. Lower hop lengths means more pitch accuracy but longer inference time.
-        model="full",  # Either use crepe-tiny "tiny" or crepe "full". Default is full
+        hop_length=320,  # 512 before. Hop length changes the speed that the voice jumps to a different dramatic pitch. Lower hop lengths means more pitch accuracy but longer inference time.
+        model="tiny",  # Either use crepe-tiny "tiny" or crepe "full". Default is full
     ):
         x = x.astype(
             np.float32

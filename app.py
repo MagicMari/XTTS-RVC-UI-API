@@ -2,6 +2,7 @@ import gradio as gr
 import core_tts
 import json
 import os
+import time
 
 # File to store the voice configurations
 config_file = "voice_models.json"
@@ -87,15 +88,26 @@ def main():
             return ["None", "None", "None", "None"]
 
     def submit_tts(model_name, text_input, pitch, index_rate):
+        start = time.time()
         if model_name in voice_models:
             config = voice_models[model_name]
             json_config = json.dumps(config)
             print(f"Submitting TTS with configuration: {json_config}")
             # Pass JSON config to core_tts
             audio, rvc_audio = core_tts.runtts(json_config, text_input, pitch, index_rate)
+            end = time.time()
+            print("Total time:")
+            print(end - start)
             return audio, rvc_audio
         else:
             return None, None
+
+    def load_selected_voice(model_name):
+        if model_name and model_name != "None":
+            core_tts.load_profile(model_name)
+            return f"Loaded voice model: {model_name}"
+        else:
+            return "Please select a valid voice model to load."
 
     with gr.Blocks(title='TTS RVC UI') as interface:
         with gr.Tab("TTS"):
@@ -108,6 +120,7 @@ def main():
                     model_dropdown_tts = gr.Dropdown(choices=["None"] + list(map(str, voice_models.keys())), label='Voice Model')
                     text_input = gr.Textbox(placeholder="Write here...")
                     submit_button = gr.Button(value='Submit')
+                    load_model_button = gr.Button(value="Load Voice Model")  # New button to load the voice model
                     with gr.Row():
                         pitch_slider = gr.Slider(minimum=-12, maximum=12, value=0, step=1, label="Pitch")
                         index_rate_slider = gr.Slider(minimum=0, maximum=1, value=0.75, step=0.05, label="Index Rate")
@@ -119,6 +132,12 @@ def main():
                 inputs=[model_dropdown_tts, text_input, pitch_slider, index_rate_slider],
                 outputs=[audio_output, rvc_audio_output],
                 fn=submit_tts
+            )
+
+            load_model_button.click(  # Configure the new button
+                inputs=[model_dropdown_tts],
+                outputs=[gr.Textbox(label="Load Status")],  # Display the status of the loading process
+                fn=load_selected_voice
             )
 
         with gr.Tab("Voice Configurator"):
@@ -155,4 +174,4 @@ def main():
             lang_dropdown_vc
         ])
 
-    interface.launch(server_name="0.0.0.0", server_port=5000, quiet=True)
+    interface.launch(server_name="0.0.0.0", server_port=8889, quiet=True)

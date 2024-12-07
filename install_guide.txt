@@ -9,8 +9,18 @@ python -m unidic download
 git clone https://github.com/myshell-ai/OpenVoice.git
 cd OpenVoice
 pip install -e .
+pip install nemo_toolkit['all']==1.9.0
+
+sudo apt-get install libsndfile1 libsndfile1-dev
+or
+conda install -c conda-forge libsndfile
+
+pip install torch torchaudio==2.1.0 --index-url https://download.pytorch.org/whl/cpu
+or
+pip install torch torchaudio==2.1.0 --index-url https://download.pytorch.org/whl/cu118
 
 conda install -c "nvidia/label/cuda-11.8.0" cuda-toolkit
+conda install -c conda-forge libffi
 python3 -m pip install nvidia-cudnn-cu11==8.9.2.26
 mkdir -p $CONDA_PREFIX/etc/conda/activate.d
 echo 'CUDNN_PATH=$(dirname $(python -c "import nvidia.cudnn;print(nvidia.cudnn.__file__)"))' >> $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh

@@ -4,10 +4,13 @@ from rvc import Config, load_hubert, get_vc, rvc_infer
 import gc , os, requests
 from pathlib import Path
 import json
+import time
+import HiFi_GAN
 
 voices = []
 rvcs = []
 langs = ["en", "es", "fr", "de", "it", "pt", "pl", "tr", "ru", "nl", "cs", "ar", "zh-cn", "hu", "ko", "ja", "hi"]
+
 
 def download_models():
 	rvc_files = ['hubert_base.pt', 'rmvpe.pt']
@@ -54,6 +57,10 @@ def startup():
 	tts_openvoice = openvoice_tts
 	tts_openvoice.openvoice_setup()
 
+	HiFi_GAN.ini_hifigan()
+
+	#openvoice_tts.load_se(language="EN_NEWEST", reference_speaker="./voices/Female-01.wav")
+
 
 def get_rvc_voices():
 	global voices 
@@ -74,9 +81,22 @@ def get_rvc_voices():
 #	voice_change(rvc, pitch_change, index_rate)
 #	return ["./output.wav" , "./outputrvc.wav"]
 
-
+def load_profile(profile_name):
+	global isLoaded
+	try:
+		jsonFile = open("./voice_models.json")
+		voices = json.load(jsonFile)
+		ref_voice = "./voices/" + voices[profile_name]["reference_voice"]
+		lang = voices[profile_name]["language"]
+		tts_openvoice.load_se(reference_speaker=ref_voice, language=lang)
+		jsonFile.close()
+		isLoaded = True
+	except:
+		isLoaded = False
 
 def runtts(voice_model ,text, pitch_change, index_rate):
+	if(isLoaded == False):
+		return
 	voice_model = json.loads(voice_model)
 	voice_model = dict(voice_model)
 	modelname = voice_model["rvc_path"]
@@ -84,8 +104,16 @@ def runtts(voice_model ,text, pitch_change, index_rate):
 	reference_voice = voice_model["reference_voice"]
 	tts_model = voice_model["model"]
 	lang = voice_model["language"]
-	audio = tts_openvoice.tts_to_file(text=text, reference_speaker="./voices/"+ reference_voice, language=lang, file_path="./output.wav")
+	startTTS = time.time()
+	audio = tts_openvoice.tts_to_file(text=text, reference_speaker="./voices/"+ reference_voice, language=lang, file_path="./output.wav", hifi_gan=False)
+	endTTS = time.time()
+	print("TTS:")
+	print(endTTS - startTTS)
+	startRVC = time.time()
 	voice_change(rvc, pitch_change, index_rate)
+	endRVC = time.time()
+	print("RVC:")
+	print(endRVC - startRVC)
 	#Apply HiFi-GAN then output
 	return ["./output.wav" , "./outputrvc.wav"]
 
